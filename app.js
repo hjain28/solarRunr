@@ -12,7 +12,6 @@ var usersRouter = require('./routes/users');
 var photonRouter = require('./routes/photon');
 var devicesRouter = require('./routes/devices');
 var positionRouter = require('./routes/Himanshu');
-
 var app = express();
 
 // view engine setup
@@ -46,6 +45,11 @@ app.use('/users', usersRouter);
 app.use('/devices', devicesRouter);
 app.use('/Himanshu', positionRouter);
 app.use('/photon', photonRouter);
+
+//email confirmation
+//app.post('/confirmation', usersRouter.confirmationPost);
+//app.post('/resend', usersRouter.resentTokenPost);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

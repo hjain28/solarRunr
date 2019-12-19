@@ -1,6 +1,7 @@
 function sendRegisterRequest() {
   let email = $('#email').val();
   let password = $('#password').val();
+  
   let fullName = $('#fullName').val();
   let passwordConfirm = $('#passwordConfirm').val();
   
@@ -16,39 +17,39 @@ function sendRegisterRequest() {
   $('#ServerResponse').html("");
 
   if(!emailRe.test(email)){
-	$('#ServerResponse').append("<span class='red-text text-darken-2'><li>Invalid or missing email address.</li></span>");
-	isValid = false;
+  $('#ServerResponse').append("<span class='red-text text-darken-2'><li>Invalid or missing email address.</li></span>");
+  isValid = false;
   }
 
   if(fullName.length == 0 ){
-	$('#ServerResponse').append("<span class='red-text text-darken-2'><li>Missing full name.</li></span>");
-	isValid = false;
+  $('#ServerResponse').append("<span class='red-text text-darken-2'><li>Missing full name.</li></span>");
+  isValid = false;
   }
   
   if(password.length <10 || password.length >20){
-	$('#ServerResponse').append("<span class='red-text text-darken-2'><li>Password must be between 10 and 20 characters.</li></span>");
-	isValid = false;
-	}
-	
+  $('#ServerResponse').append("<span class='red-text text-darken-2'><li>Password must be between 10 and 20 characters.</li></span>");
+  isValid = false;
+  }
+  
   if(!passwordRe.test(password)){
-	$('#ServerResponse').append("<span class='red-text text-darken-2'><li>Password must contain at least one lowercase character.</li></span>");
+  $('#ServerResponse').append("<span class='red-text text-darken-2'><li>Password must contain at least one lowercase character.</li></span>");
     isValid = false;
-	}
-	
+  }
+  
   if(!passwordUpperRe.test(password)){
-	$('#ServerResponse').append("<span class='red-text text-darken-2'><li>Password must contain at least one uppercase character.</li></span>");
+  $('#ServerResponse').append("<span class='red-text text-darken-2'><li>Password must contain at least one uppercase character.</li></span>");
     isValid = false;
    }
   
   if(!passwordNumRe.test(password)){
     $('#ServerResponse').append("<span class='red-text text-darken-2'><li>Password must contain at least one digit.</li></span>");
     isValid = false;
-	}
+  }
 
   if(!passwordSpecialRe.test(password)){
     $('#ServerResponse').append("<span class='red-text text-darken-2'><li>Password must contain at least one special character (#, ?, !, @, $, %, ^, &, *, -, .).</li></span>");
     isValid = false;
-	}
+  }
 
   
   if (password != passwordConfirm) {
@@ -57,8 +58,8 @@ function sendRegisterRequest() {
   }
   
   if(isValid == false){
-	$('#ServerResponse').show();
-	return;
+  $('#ServerResponse').show();
+  return;
   }
   
   $.ajax({
@@ -92,8 +93,30 @@ function registerError(jqXHR, textStatus, errorThrown) {
     $('#ServerResponse').show();
   }
 }
+function onSignIn(googleUser) {
+  var profile = googleUser.getBasicProfile();
+  //console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+  console.log('Name: ' + profile.getName());
+  //console.log('Image URL: ' + profile.getImageUrl());
+  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+  let email = profile.getEmail();
+  let password = "@Rishab123456";
+  let name =  profile.getName();
+
+
+  $.ajax({
+    url: '/users/register',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ email : email, password : password, fullName: name }), 
+    dataType: 'json'
+  })
+    .done(registerSuccess)
+    .fail(registerError);
+}
 
 $(function () {
+  $('#google').click(onSignIn);
   $('#signup').click(sendRegisterRequest);
 });
 

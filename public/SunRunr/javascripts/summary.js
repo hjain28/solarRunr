@@ -1,25 +1,43 @@
 function sendReqForSummaryInfo() {
   $.ajax({
     url: '/devices/summary',
-    type: 'GET',
-    headers: { 'x-auth': window.localStorage.getItem("authToken") },
+    type: 'POST',
+    headers: { 'x-auth': window.localStorage.getItem("authToken")},
+    data : {deviceID : $('#deviceId').val()},
     dataType: 'json'
   })
     .done(summaryInfoSuccess)
     .fail(summaryInfoError);
 }
 
-function summaryInfoSuccess(data, textSatus, jqXHR) {
-  
-  // Add the devices to the list before the list item for the add device button (link)
-  for (var position of data.positions) {
-    ("#deviceId").html(position.deviceId);
-    ("#longitude").html(position.longitude);
-    ("#latitude").html(position.latitude);
-    ("#uv").html(position.uv);
-    ("#speed").html(position.gpsSpeed);
-  }
+function summaryInfoSuccess(data, textSatus, jqXHR) { 
+      console.log(window.localStorage);
+      $("#WactivityDate").html(data.Wdate);
+      $("#Wduration").html(data.WDuration);
+      $("#WuvExposure").html(data.Wuv);
+      $("#WcaloriesBurned").html(data.Wcalories);
+      $("#Wtemperature").html("62 F");
+      $("#WHumidity").html("53%");
+      $("#deviceId").html(data.deviceId);
+      $("#totalActivityDuration").html(data.totalDuration);
+      $("#totalCaloriesBurned").html(data.totalCalories);
+      $("#totalUVExposure").html(data.totalUV);
+      $("#CactivityDate").html(data.Cdate);
+      $("#Cduration").html(data.CDuration);
+      $("#CuvExposure").html(data.Cuv);
+      $("#CcaloriesBurned").html(data.Ccalories);
+      $("#Ctemperature").html("62 F");
+      $("#CHumidity").html("53%");
+
+      $("#RactivityDate").html(data.Rdate);
+      $("#Rduration").html(data.RDuration);
+      $("#RuvExposure").html(data.Ruv);
+      $("#RcaloriesBurned").html(data.Rcalories);
+      $("#Rtemperature").html("62 F");
+      $("#RHumidity").html("53%");
+
 }
+
 
 function summaryInfoError(jqXHR, textStatus, errorThrown) {
   // If authentication error, delete the authToken 
@@ -34,11 +52,6 @@ function summaryInfoError(jqXHR, textStatus, errorThrown) {
   } 
 }
 
-// Registers the specified device with the server.
-
-
-
-
 // Handle authentication on page load
 $(function() {
   // If there's no authToekn stored, redirect user to 
@@ -48,5 +61,5 @@ $(function() {
   }
   else {
     sendReqForSummaryInfo();
-  }
+      
 });

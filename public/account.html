@@ -25,7 +25,8 @@
   <!-- Dropdown Structure -->
    <ul id='dropdown1' class='dropdown-content'>
     <li><a href="account.html">Home</a></li>
-    <li><a href="recentposition.html">Recent</a></li>
+    <li><a href="weather.html">Weather Forecast</a></li>
+    <li><a href="allUser.html">All User Data</a></li>
     <li class="divider"></li>
     <li><a href="#!" id="signout">Sign out</a></li>
   </ul>
@@ -94,7 +95,7 @@
           <button id="summary" class="waves-effect waves-light btn">Summary</button> 
           <button id="summaryCancel" class="waves-effect waves-light btn">Cancel</button> 
         </li>
-        <li class="collection-item" id="summaryDeviceControl"><a href="#!" id="summaryDevice">Summary Device</a></li>
+        <li class="collection-item" id="summaryDeviceControl"><a href="activity.html" id="summaryDevice">Summary Device</a></li>
         <li class="collection-item" id="deleteDeviceForm">
           <label for="deviceId">Delete Device ID:</label>
           <input type="text" id="deleteDeviceId" name="deviceId" col="30">
@@ -112,29 +113,6 @@
           <button id="replaceCancel" class="waves-effect waves-light btn">Cancel</button> 
         </li>
         <li class="collection-item" id="replaceDeviceControl"><a href="#!" id="replaceDevice">Replace Device</a></li>
-      <li class="collection-header" id="summaryListControl">
-          <h5>Summary List</h5>
-             <table style="width:100%">
-  <tr>
-    
-    <th>Device ID</th>
-    <th>Longitude</th>
-    <th>Latitude</th>
-    <th>UV</th>
-    <th>Speed</th>
-  </tr>
- 
-  <tr>
-      <td id = "deviceId"></td>
-      <td id = "longitude"></td>
-      <td id = "latitude"></td>
-      <td id = "uv"></td>
-      <td id = "speed"></td>
-  </tr>    
-  
-  
-</table>
-        </li>
    
       </ul>
       <div class='red-text text-darken-2' id="error"></div>

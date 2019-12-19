@@ -4,7 +4,8 @@ let Device = require("../models/device");
 let fs = require('fs');
 let jwt = require("jwt-simple");
 let Position = require("../models/position");
-
+let Threshold = require("../models/threshold");    //**
+//let sync = require('synchronize');
 /* Authenticate user */
 var secret = fs.readFileSync(__dirname + '/../../jwtkey').toString();
 
@@ -73,6 +74,121 @@ router.get('/status/:devid', function(req, res, next) {
   });
 });
 
+
+//****************
+router.post('/uvthreshold', function(req,res, next) {
+ let  responseJson = {message : ""};
+ let email= "";
+  if (req.headers["x-auth"]) {
+    try {
+      let decodedToken = jwt.decode(req.headers["x-auth"], secret);
+      email = decodedToken.email;
+    }
+    catch (ex) {
+      responseJson.message = "Invalid authorization token while putting threshold values.";
+      return res.status(400).json(responseJson);
+    }
+  }
+  else {
+    // Ensure the request includes the email parameter
+    if( !req.body.hasOwnProperty("email")) {
+      responseJson.message = "Invalid authorization token or missing email address while putting threshold values.";
+      return res.status(400).json(responseJson);
+    }
+    email = req.body.email;
+  }
+
+  if(!req.body.hasOwnProperty("uv")){
+    responseJson.message = "Missing threshold of UV.";
+    return res.status(400).json(responseJson);
+  }
+  else{
+  Threshold.findOne({userEmail: email}, function(err,data){
+    if (data == null){
+       let newthreshold = new Threshold({
+        userEmail  : email,
+        uvthreshold : req.body.uv
+        });
+       console.log("checkpoint  1");
+       newthreshold.save(function(err, newthreshold){
+        if (err){
+          responseJson.message = err ;
+          return res.status(400).json(responseJson);
+        }
+        else {
+        responseJson.message =  "UV is saved." ;
+        return res.status(201).json(responseJson);
+       }
+       });
+
+    }
+    else{
+        console.log("checkpoint2");
+        console.log(req.body.uv);
+        Threshold.updateOne({userEmail:email}, {$set: {uvthreshold :req.body.uv}});
+    }
+  });
+  }
+});
+
+router.post("/speedthreshold", function(req,res,next) {
+ let  responseJson = {message : ""};
+ let email= "";
+  if (req.headers["x-auth"]) {
+    try {
+      let decodedToken = jwt.decode(req.headers["x-auth"], secret);
+      email = decodedToken.email;
+    }
+    catch (ex) {
+      responseJson.message = "Invalid authorization token while putting threshold values.";
+      return res.status(400).json(responseJson);
+    }
+  }
+  else {
+    // Ensure the request includes the email parameter
+    if( !req.body.hasOwnProperty("email")) {
+      responseJson.message = "Invalid authorization token or missing email address while putting threshold values.";
+      return res.status(400).json(responseJson);
+    }
+    email = req.body.email;
+  }
+
+
+  if(!req.body.hasOwnProperty("gpsSpeed")){
+    responseJson.message = "Missing threshold of gpsSpeed.";
+    return res.status(400).json(responseJson);
+  }
+  else{
+    Threshold.findOne({userEmail: email}, function(err,data){
+    if (data == null){
+       let newthreshold = new Threshold({
+        userEmail  : email,
+        gpsSpeedthreshold : req.body.gpsSpeed
+        });
+       console.log("checkpoint 3");
+       newthreshold.save(function(err, newthreshold){
+        if (err){
+          responseJson.message = err ;
+          return res.status(400).json(responseJson);
+        }
+        
+        else {
+          responseJson.message = "gpsSpeed is saved";
+          return res.status(201).json(responseJson);
+        }
+       });
+
+    }
+    else{
+        console.log("checkpoint4");
+        Threshold.updateOne({userEmail : email}, {$set : {uvthreshold :req.body.gpsSpeed}});
+    }
+  });
+  }
+});
+
+//***********************************
+
 router.post('/register', function(req, res, next) {
   let responseJson = {
     registered: false,
@@ -109,7 +225,32 @@ router.post('/register', function(req, res, next) {
     }
     email = req.body.email;
   }
+//******************************************  
+ let uv = 0;
+  let  gpsSpeed = 0;
+ 
+
+Threshold.findOne({userEmail : email}, function(err, data){
     
+   if (data){
+      uv  =  data["uvthreshold"];
+      gpsSpeed = data["gpsSpeedthreshold"];
+      console.log("check 5");
+      console.log(uv);
+      console.log(gpsSpeed);
+    }
+    else {
+      responseJson.message = "One of the uv and gpsSpeed threshold value is missing";
+      return res.status(400).json(responseJson);
+    }
+  });
+  
+  console.log("check 6");
+  console.log(uv);
+  console.log(gpsSpeed);
+
+//***************************************************
+
   // See if device is already registered
   Device.findOne({ deviceId: req.body.deviceId }, function(err, device) {
     if (device !== null) {
@@ -117,11 +258,12 @@ router.post('/register', function(req, res, next) {
       return res.status(400).json(responseJson);
     }
     else {
-      // Get a new apikey
-     deviceApikey = getNewApikey();
+        deviceApikey = getNewApikey();
       
       // Create a new device with specified id, user email, and randomly generated apikey.
       let newDevice = new Device({
+        uvthreshold : uv ,                                      ////////***
+        speedthreshold: gpsSpeed,                               ////////********
         deviceId: req.body.deviceId,
         userEmail: email,
         apikey: deviceApikey
@@ -243,124 +385,247 @@ router.post('/delete', function(req, res, next) {
   });
 });
 
-/*
-
-router.get('/summary', function(req, res, next) {
-
-if (!req.headers["x-auth"]) {
-      return res.status(401).json({success: false, message: "No authentication token"});
-   }
-   
-   var authToken = req.headers["x-auth"];
-   
-   try {
-      var decodedToken = jwt.decode(authToken, secret);
-
-  let responseJson = { devices: [] };
-  
-  Position.findOne({deviceId: decodedToken.deviceId }, function(err, position) {
-  console.log("1121");
-    if (err) {
-      let errorMsg = {"message" : err};
-      res.status(400).json(errorMsg);
-    }
-    else {
-     ("#deviceId").html(position.deviceId);
-     ("#longitude").html(position.longitude);
-     ("#latitude").html(position.latitude);
-     ("#uv").html(position.uv);
-     ("#speed").html(position.gpsSpeed);
-
-    }
-    res.status(200).json(responseJson);
-  });
- }
-   catch (ex) {
-      return res.status(401).json({success: false, message: "Invalid authentication token."});
-   }
-
-});
-*/
 router.post('/summary', function(req, res, next) {
 
-    
-      
-    var deviceId = req.body.deviceId;
-    console.log(deviceId + "HEREE******");
-    
-
-    let deviceExists = false;
-    return res.status(201).json("brooo");
-
-
+    responsejson = { success: false, message : ""} ; 
+    if (!req.headers["x-auth"]) {
+      responsejson.message  = "no authentication token.";
+      return res.status(401).json(responsejson);
+    }
+    let deda = date(date.now());
+    let da = deda.tostring();
+    let responsedata = { deviceid: req.body.deviceid, 
+           wdate : da, cdate : da, rdate : da,
+          totalduration: 0, 
+          wduration: 0, cduration: 0, rduration:0,            
+          totalcalories: 0, 
+          wcalories: 0,rcalories :0, ccalories: 0, 
+          totaluv: 0, 
+          wuv: 0, ruv: 0, cuv : 0     
+            }; 
+    return res.status(200).json(responsedata);
   
-  // Ensure the request includes the deviceId parameter
-  // if( !req.body.hasOwnProperty("deviceId")) {
-  //   console.log("1.5*********");
-  //   responseJson.message = "Missing deviceId BROOOOO.";
-  //   return res.status(400).json(responseJson);
-  // }
-  // console.log("2*********");
-  // let email = "";
+    let uvthresh =  8;
+      let speedthresh = 4;
     
-  // // If authToken provided, use email in authToken 
-  // if (req.headers["x-auth"]) {
-  //   try {
-  //     let decodedToken = jwt.decode(req.headers["x-auth"], secret);
-  //     email = decodedToken.email;
-
-  //   }
-  //   catch (ex) {
-  //     responseJson.message = "Invalid authorization token.";
-  //     return res.status(400).json(responseJson);
-  //   }
-
-  // }
-  // else {
-  //   // Ensure the request includes the email parameter
-  //   if( !req.body.hasOwnProperty("email")) {
-  //     responseJson.message = "Invalid authorization token or missing email address.";
-  //     return res.status(400).json(responseJson);
-  //   }
-  //   email = req.body.email;
-  // }
-  // console.log("3*********");
-  // // See if device is already registered
-  //  return res.status(201).json(responseJson);
-  // Device.findOne({ deviceId: req.body.deviceId }, function(err, device) {
-  //   if (device == null) {
-  //     responseJson.message = "Device ID " + req.body.deviceId + " is invalid.";
-  //     return res.status(400).json(responseJson);
-  //   }
-  //   else {
-  //       return res.status(201).json(responseJson);
-  //     // Save device. If successful, return success. If not, return error message.
-  //   }
-  // });
+    
+      device.findone({deviceid: req.body.deviceid}, function(err,device){
+      responsejson.message = "device id " + req.body.deviceid + " is invalid.";
+      if(device == null) {
+              responsejson.message = "device id" + req.body.deviceid + "is invalid";
+              return res.status(400).json(responsejson);
+         }
+      else{
+              uvthresh = device["uvthreshold"];
+              speedthresh  = device["speedthreshold"];
+      }
+      });
+     
 
 
+          let psoitiondata = {lon :Number, lat : Number, uv: Number, date: Date.now()}
+          let positionstatus = {running :[],walking: [],cycling:[]};
+         /* let responsedata = { deviceid: req.body.deviceid, 
+           wdate : {type :date, default: date.now()} , cdate : {type:date, default : date.now()}, rdate : {type:date, default:date.now()},
+          totalduration: {type :string , default :"0 sec"}, 
+          wduration:{type :string , default :"0 sec"}, cduration:{type :string , default :"0 sec"}, rduration:{type :string , default :"0 sec"},            totalcalories: {type : number, default :0}, 
+          wcalories: {type:number, default: 0},rcalories :{type:number, default: 0}, ccalories:  {type:number, default: 0}, 
+          totaluv: {type : number,default :0}, 
+          wuv:  {type:number, default: 0}, ruv: {type: number, default :0}, cuv : {type: number, default:0}      
+            }; */
+          
+    
+ 
+     position.find({deviceid: req.body.deviceid }, function(err, position) {
+        if(position == null){
+          responsejson.message = "position is not registerd with device id yet.";  
+          return  res.status(201).json(responsejson);
+        }
+        else{
+              let activity_ = 1;
+              for(var value of position){
+                    positiondata['lon'] = value.longitude;
+                    positiondata['lat'] = value.latitude;
+                    positiondata['uv'] = value.uv;
+                    positiondata['date'] = value.activitytime;
 
-//    Position.find(query, function(err, positions){    
+                    if (value.activitynumber == activity_){
+                        if ((value.gpsspeed > 0) && value.gpsspeed < speedthrash){
+                            positionstatus.walking.push(positiondata);
+                        }
+                        else if ((value.gpsspeed >= speedthrash) && (value.gpsspeed < speedthrash + 5)){
+                          positionstatus.running.push(positiondata);
+                        }
+                        else if (value.gpsspeed >= speedthrash +5){
+                          positionstatus.cycling.push(positiondata);
+                        }
+                    }
+                    else {
+                        break;
+                    }
+              }
 
-//    if(err){
-//      res.status(400).json("Device Id not found in DATABASE");
-//      return; 
-//    }
+            let activity =[] ;
+            activity = positionstatus.walking;
+            let tuv =0;
+            let tt = 0;
+            let td =0;
+            let a=0 ;
+            let c =0;
+            let dlat =0;
+            let dlon =0;
+            responsedata.wdate = activity[0].date;
+            let temp1 = activity[0].lon;
+            let temp2 = activity[0].lat;
+            let temp3 = activity[0].date; 
+            for (var act of activity){
+                  tuv = tuv +  act.uv;
+                  tt = tt + (act.date - temp3);
+                   dlon = act.lon - temp1;
+                   dlat = act.lat - temp2;
+                   a  = math.pow(math.sin(dlat/2),2) + math.cos(temp2)*math.cos(act.lat)*math.pow(math.sin(dlon/2),2);
+                   c  = 2*math.atan2(math.sqrt(a), math.sqrt(1-a));
+                  td = td + 6373000*c;
+                  temp1 = act.lon;
+                  temp2 = act.lat;
+                  temp3 = act.date;
+            }
+            responsedata.wcalories = 2.45 + 1.2*(td*1000/tt);
+            responsedata.wuv = tuv;
+            responsedata.wduration = tt/1000;
 
-//    else {
-//      for(var value of positions){
-  
-//        var string = JSON.stringify(value);
-//        var entries = JSON.parse(string);
-//        returnJson += "deviceID = " + entries.deviceId + " Longitude = " + entries.longitude +  "  Latitude = " + entries.latitude + " uv = " + entries.uv +  " gpsSpeed = " + entries.gpsSpeed + 
-// "                                                                                                               ";
-//      }
-      
-//      res.status(200).json(returnJson);
-//      return;
-      
-//    }
-//  });
-  
+            activity = positionstatus.running;
+           tuv =0;
+            
+             tt = 0;
+             td =0;
+            responsedata.rdate = activity[0].date;
+            temp1 = activity[0].lon;
+             temp2 = activity[0].lat;
+           temp3 = activity[0].date;
+            for (var act of activity){
+                  tuv = tuv +  act.uv;
+                  tt = tt + (act.date - temp3);
+                 dlon = act.lon - temp1;
+                   dlat = act.lat - temp2;
+                   a  = math.pow(math.sin(dlat/2),2) + math.cos(temp2)*math.cos(act.lat)*math.pow(math.sin(dlon/2),2);
+                   c  = 2*math.atan2(math.sqrt(a), math.sqrt(1-a));
+                  td = td + 6373000*c;
+                  temp1 = act.lon;
+                  temp2 = act.lat;
+                  temp3 = act.date;
+            }
+            responsedata.rcalories = 2.45+1.2*(td*1000/tt);
+            responsedata.ruv = tuv;
+            responsedata.rduration = tt/1000;
+
+            activity = positionstatus.cycling;
+            tuv =0;
+          
+            tt = 0;
+            td =0;
+            responsedata.cdate = activity[0].date;
+            temp1 = activity[0].lon;
+            temp2 = activity[0].lat;
+            temp3 = activity[0].date;
+            for (var act of activity){
+                  tuv = tuv +  act.uv;
+                  tt = tt + (act.date - temp3);
+                   dlon = act.lon - temp1;
+                   dlat = act.lat - temp2;
+                   a  = math.pow(math.sin(dlat/2),2) + math.cos(temp2)*math.cos(act.lat)*math.pow(math.sin(dlon/2),2);
+                   c  = 2*math.atan2(math.sqrt(a), math.sqrt(1-a));
+                  td = td + 6373000*c;
+                  temp1 = act.lon;
+                  temp2 = act.lat;
+                  temp3 = act.date;
+            }
+            responsedata.ccalories = 2.45 +1.2*(td*1000/tt);
+            responsedata.cduration  = tt/1000;
+            responsedata.cuv = tuv;
+        
+            responsedata.totalduration = responsedata.wduration + resposedata.cduration + responsedata.rduration;
+            responsedata.totalcalories = responsedata.wcalories + responsedata.rcalories + responsedata.ccalories;
+            responsedata.totaluv = responsedata.wuv + responsedata.ruv + responsedata.cuv;
+
+        }    
+  });
+return  res.status(200).json(responsedata);
 });
+
+
+router.post('/lineandmap', function(req, res, next) {
+
+    responsejson = { success: false, message : ""} ; 
+    if (!req.headers["x-auth"]) {
+      responsejson.message  = "no authentication token.";
+      return res.status(401).json(responsejson);
+    }
+    let deda = date(date.now());
+    let da = deda.tostring();
+let responsedata = { deviceid: req.body.deviceid, 
+           wdate : da, cdate : da, rdate : da,
+          totalduration: 0, 
+          wduration: 0, cduration: 0, rduration:0,            
+          totalcalories: 0, 
+          wcalories: 0,rcalories :0, ccalories: 0, 
+          totaluv: 0, 
+          wuv: 0, ruv: 0, cuv : 0     
+            }; 
+    return res.status(200).json(responsedata);
+   
+    let uvthresh =  8;
+      let speedthresh = 4;
+    
+    
+      device.findone({deviceid: req.body.deviceid}, function(err,device){
+      responsejson.message = "device id " + req.body.deviceid + " is invalid.";
+      if(device == null) {
+              responsejson.message = "device id" + req.body.deviceid + "is invalid";
+              return res.status(400).json(responsejson);
+         }
+      else{
+              uvthresh = device["uvthreshold"];
+              speedthresh  = device["speedthreshold"];
+      }
+      });
+     
+
+
+    let positiondata = {lon: 0, lat :0};
+    let positiondata1 = { speed :0, time :  Date.now()};
+    let responsedata = {LineData:[],mapData:[]};
+                 
+      
+     position.find({deviceid: req.body.deviceid }, function(err, position) {
+        if(position == null){
+          responsejson.message = "position is not registerd with device id yet.";  
+          return  res.status(201).json(responsejson);
+        }
+        else{
+              let activity_ = 1;
+            
+              for(var value of position){
+                    positiondata['lon'] = value.longitude;
+                    positiondata['lat'] = value.latitude;
+                    positiondata1['speed'] = value.gpsSpeed;
+                    positiondata1['date'] =value.activitytime ;
+
+                    if (value.activitynumber == activity_){
+                        responseData.LineData.push(positiondata1);
+                        responseData.mapData.push(positiondata);
+                    }
+                    else {
+                        break;
+                    }
+              }
+    }
+  });
+    return  res.status(200).json(responsedata);
+});
+
+
+
+
+
 module.exports = router;

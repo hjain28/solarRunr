@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+     <title>SunRunr - Home - SunRunr</title>
+
+     <!-- Import jQuery -->
+     <script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+     <!-- Import Google Icon Font -->
+     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+     <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+     <link href="/SunRunr/stylesheets/sunrunr.css" rel="stylesheet">
+     <script src="/SunRunr/javascripts/account.js"></script>
+     <script src="/SunRunr/javascripts/signout.js"></script>
+ <!--  <script src="/SunRunr/javascripts/summary.js"></script>-->
+
+
+     <!-- Let browser know website is optimized for mobile -->
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+
+<body>
+    <!-- Dropdown Structure -->
+   <ul id='dropdown1' class='dropdown-content'>
+        <li><a href="account.html">Home</a></li>
+        <li><a href="weather.html">Weather Forecast</a></li>
+    <li><a href="allUser.html">All User Data</a></li>
+        <li class="divider"></li>
+        <li><a href="#!" id="signout">Sign out</a></li>
+    </ul>
+    <nav>
+        <div class="nav-wrapper blue-grey darken-2">
+            <a href="summaryList.html" class="brand-logo left"><img id="logo" src="images/logo.png"><span id="name">SunRunr</span></a>
+            <ul class="right ">
+                <!-- Dropdown Trigger -->
+             <li><a class='dropdown-trigger btn' href='#' data-target='dropdown1'><i class="material-icons">more_vert</i></a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="row" id="main">
+        <div class="col s12 m12">
+            <ul class="collection with-header">
+                <li class="collection-header">
+                    <h5>All User Data</h5>
+                </li>
+                <li class="collection-item">Total number of activities: <span id="totalActivitiesNumber"> 12 </span></li>
+                <li class="collection-item">Average Total Distance:<span id="averageTotalDistance"> "12500 metre"</span></li>
+                <li class="collection-item">Average Calories Burned:<span id="averageCaloriesBurned"> "610"</span></li>
+                <li class="collection-item">Average UV Exposure:<span id="averageUVExposure"> "480"</span></li>
+               
+            </ul>
+            <div class='red-text text-darken-2' id="ServerResponse"></div>
+
+        
+            <div class='red-text text-darken-2' id="error"></div>
+        </div>
+    </div>
+  </body>
+
+  <!-- Initialize dropdown menu in materialize -->
+  <script>
+    $('.dropdown-trigger').dropdown();
+  </script>
+
+</html>
+

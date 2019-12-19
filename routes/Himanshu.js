@@ -27,12 +27,17 @@ function authenticateAuthToken(req) {
     }
 }
 
+
+
+
 // POST: Adds reported pothole to the database and returns total hit count for the pothole
 // Authentication: APIKEY. The device reporting must have a valid APIKEY
 router.post("/position", function(req, res) {
     let responseJson = {
         success : false,
         message : "",
+        uvthreshold : -1,
+        speedthreshold : -1
        // totalHits: 1
     };
 
@@ -89,7 +94,7 @@ router.post("/position", function(req, res) {
         
         if (device.apikey != req.body.apikey) {
             responseJson.message = "Invalid apikey for device ID " + req.body.deviceId + ".";
-        console.log(responseJson.message)
+          console.log(responseJson.message)
           return res.status(201).send(JSON.stringify(responseJson));
         }
                
@@ -98,6 +103,8 @@ router.post("/position", function(req, res) {
              longitude: req.body.longitude, 
              latitude: req.body.latitude
          });
+        
+          
 
          // Execute the query     
          findPositionQuery.exec(function (err, position) {
@@ -113,6 +120,7 @@ router.post("/position", function(req, res) {
                  //pothole.totalHits++;
                  position.lastReported = Date.now();
                  responseJson.message = "Position Hit recorded.";
+                 
                  //responseJson.totalHits = pothole.totalHits;
              }
              // New pothole found
@@ -128,15 +136,19 @@ router.post("/position", function(req, res) {
                      uv : req.body.uv,
       		           gpsSpeed : req.body.gpsSpeed
                  });
-                 responseJson.message = "*****************************New position recorded.*************************************************";
-             }                
 
+                 responseJson.message = "*****************************New position recorded.*************************************************";
+             }   
+
+            responseJson.uvthreshold = device["uvthreshold"];
+            responseJson.speedthreshold = device["speedthreshold"];
+          
              // Save the pothole data. 
              position.save(function(err, newPosition) {
                  if (err) {
                      responseJson.status = "ERROR";
                      responseJson.message = "Error saving data in db." + err;
-         console.log(responseJson.message);
+                    console.log(responseJson.message);
                      return res.status(201).send(JSON.stringify(responseJson));
                  }
 

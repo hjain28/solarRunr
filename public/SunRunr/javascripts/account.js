@@ -103,10 +103,6 @@ function registerDevice() {
 }
 
 function deleteDevice(event, data) {
-
-console.log(data);
-
-
  if(data.length>0){
 
   $.ajax({
@@ -141,13 +137,7 @@ function summaryDevice(event, data){
         data: { 'deviceId': data },
         dataType: 'json'
        }).done(function (data, textStatus, jqXHR) {
-        console.log(data);
-  //       ("#deviceIdRow").html(data.deviceId);
-  //     ("#longitude").html(data.longitude);
-  //     ("#latitude").html(data.latitude);
-  //     ("#uv").html(data.uv);
-  //     ("#speed").html(data.gpsSpeed);
-  // ("#summaryListControl").show();
+  window.localStorage.setItem('deviceId', $("#summaryDeviceId").val());
         window.location = "summary.html";
   
      })
@@ -288,7 +278,6 @@ function updateAccount(){
        }).done(function (data, textStatus, jqXHR) {
       $("#email").html($("#emailNew").val());
       $("#fullName").html($("#fullNameNew").val());
-  console.log(window.localStorage.getItem("authToken"));
        hideUpdateForm();
   window.localStorage.removeItem("authToken");
   window.location = "index.html";
@@ -339,6 +328,51 @@ function replaceDevice(){
        $("#error").show();
      }); }
 }
+
+function registerUV() {
+ if($("#uv").val().length>0){
+  $.ajax({
+    url: '/devices/uvthreshold',
+    type: 'POST',
+    headers: { 'x-auth': window.localStorage.getItem("authToken") },  
+    contentType: 'application/json',
+    data: JSON.stringify({ uv:$("#uv").val() }), 
+    dataType: 'json'
+   })
+     .fail(function(jqXHR, textStatus, errorThrown) {
+       let response = JSON.parse(jqXHR.responseText);
+       $("#error").html("Error: " + response.message);
+       $("#error").show();
+     }); 
+ }
+ else{
+       $("#error").html("Error: Invalid uv threshold value.");
+       $("#error").show();
+ }
+}
+
+function registerSpeed() {
+ if($("#gpsSpeed").val().length>0){
+  $.ajax({
+    url: '/devices/speedthreshold',
+    type: 'POST',
+    headers: { 'x-auth': window.localStorage.getItem("authToken") },  
+    contentType: 'application/json',
+    data: JSON.stringify({ gpsSpeed: $("#gpsSpeed").val() }), 
+    dataType: 'json'
+   })
+     .fail(function(jqXHR, textStatus, errorThrown) {
+       let response = JSON.parse(jqXHR.responseText);
+       $("#error").html("Error: " + response.message);
+       $("#error").show();
+     }); 
+ }
+ else{
+       $("#error").html("Error: Invalid gpsSpeed threshold value.");
+       $("#error").show();
+ }
+}
+
 
 function showUpdateForm() {
   $("#emailNew").val("");   
@@ -435,9 +469,5 @@ $(function() {
   $("#speedThreshold").click(showSpeedThresholdForm);
   $("#registerSpeed").click(registerSpeed); 
   $("#speedCancel").click(hideSpeedThresholdForm);  
-
-
-  
-  
 
 });

@@ -7,7 +7,9 @@ var userSchema = new db.Schema({
   password: String,	
   lastAccess:   { type: Date, default: Date.now },
   userDevices:  [ String ],
-  potholesHit:  [ { potholeId: Number, numHits: Number } ] //need to be fixed
+  potholesHit:  [ { potholeId: Number, numHits: Number } ], //need to be fixed
+  isVerified: {type: Boolean, default: false}
+  
 });
 
 var User = db.model("User", userSchema);
